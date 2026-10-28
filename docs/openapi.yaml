@@ -1,0 +1,370 @@
+openapi: 3.0.3
+info:
+  title: Azatech Online Shop Order Management API
+  version: 1.0.0
+  description: REST API untuk Sistem Online Shop (Order Management) PT Laksmada Aza Simetri.
+servers:
+  - url: http://localhost:5000/api
+    description: Local Development Server
+paths:
+  /auth/login:
+    post:
+      summary: Login pengguna dan mengembalikan token
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  example: admin@azatech.id
+                password:
+                  type: string
+                  example: password123
+      responses:
+        '200':
+          description: Berhasil login
+        '401':
+          description: Kredensial tidak valid
+        '422':
+          description: Validasi input gagal
+
+  /auth/logout:
+    post:
+      summary: Logout dan revoke token
+      tags: [Auth]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Berhasil logout
+
+  /auth/me:
+    get:
+      summary: Ambil profil user yang sedang login
+      tags: [Auth]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Profil berhasil diambil
+        '401':
+          description: Token tidak valid atau tidak disertakan
+
+  /products:
+    get:
+      summary: List produk dengan pagination, search, dan sort
+      tags: [Products]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [name_asc, name_desc, price_asc, price_desc, stock_asc, stock_desc]
+      responses:
+        '200':
+          description: Berhasil memuat produk
+    post:
+      summary: Tambah produk baru
+      tags: [Products]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [product_code, product_name, stock, price]
+              properties:
+                product_code:
+                  type: string
+                  example: P0023
+                product_name:
+                  type: string
+                  example: Pocari Sweat 330ml Can
+                stock:
+                  type: integer
+                  example: 50
+                price:
+                  type: number
+                  example: 8500
+      responses:
+        '201':
+          description: Produk berhasil dibuat
+        '409':
+          description: Kode produk sudah digunakan
+        '422':
+          description: Validasi input gagal
+
+  /products/{id}:
+    get:
+      summary: Detail produk
+      tags: [Products]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Data produk ditemukan
+        '404':
+          description: Produk tidak ditemukan
+    put:
+      summary: Update produk
+      tags: [Products]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                product_name:
+                  type: string
+                stock:
+                  type: integer
+                price:
+                  type: number
+      responses:
+        '200':
+          description: Produk berhasil diperbarui
+    delete:
+      summary: Soft delete produk
+      tags: [Products]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Produk berhasil dihapus secara soft delete
+
+  /customers:
+    get:
+      summary: List pelanggan dengan pagination dan search
+      tags: [Customers]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Berhasil memuat pelanggan
+    post:
+      summary: Tambah pelanggan baru
+      tags: [Customers]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [customer_name, customer_address, gender, birth_date]
+              properties:
+                customer_name:
+                  type: string
+                  example: Budi Santoso
+                customer_address:
+                  type: string
+                  example: Jakarta Selatan
+                gender:
+                  type: string
+                  enum: [Pria, Wanita]
+                  example: Pria
+                birth_date:
+                  type: string
+                  example: 1990-05-12
+                phone:
+                  type: string
+                  example: '081234567890'
+      responses:
+        '201':
+          description: Pelanggan berhasil ditambahkan
+
+  /customers/{id}:
+    get:
+      summary: Detail pelanggan
+      tags: [Customers]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Data pelanggan ditemukan
+    put:
+      summary: Update data pelanggan
+      tags: [Customers]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pelanggan berhasil diperbarui
+    delete:
+      summary: Soft delete pelanggan
+      tags: [Customers]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pelanggan berhasil dihapus
+
+  /orders:
+    get:
+      summary: List riwayat pesanan (filter tanggal & pelanggan)
+      tags: [Orders]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: from
+          in: query
+          schema:
+            type: string
+        - name: to
+          in: query
+          schema:
+            type: string
+        - name: customer_id
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Berhasil memuat riwayat order
+    post:
+      summary: Buat transaksi pesanan penjualan baru
+      tags: [Orders]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [customer_id, items]
+              properties:
+                customer_id:
+                  type: string
+                  example: 9d2f6c1e-3245-48b2-b4ea-123456789abc
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [product_id, quantity]
+                    properties:
+                      product_id:
+                        type: integer
+                        example: 1
+                      quantity:
+                        type: integer
+                        example: 2
+      responses:
+        '201':
+          description: Order berhasil dibuat
+        '422':
+          description: Stok tidak mencukupi atau validasi gagal
+
+  /orders/{id}:
+    get:
+      summary: Detail order beserta item produk
+      tags: [Orders]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Data order ditemukan
+        '404':
+          description: Order tidak ditemukan
+
+  /dashboard/summary:
+    get:
+      summary: Ringkasan statistik dashboard
+      tags: [Dashboard]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Data ringkasan berhasil diambil
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
