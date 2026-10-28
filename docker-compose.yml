@@ -1,0 +1,59 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: azatech_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: azatech_shop
+    ports:
+      - "5432:5432"
+    volumes:
+      - azatech_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d azatech_shop"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: azatech_backend
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 5000
+      DATABASE_URL: "postgresql://postgres:postgrespassword@postgres:5432/azatech_shop?schema=public"
+      JWT_SECRET: "azatech-production-secret-key-2026"
+      JWT_EXPIRES_IN: "1d"
+      REFRESH_TOKEN_SECRET: "azatech-refresh-token-secret-2026"
+      REFRESH_TOKEN_EXPIRES_IN: "7d"
+      CORS_ORIGIN: "http://localhost:3000"
+    ports:
+      - "5000:5000"
+    command: >
+      sh -c "npx prisma migrate deploy &&
+             npm run prisma:seed &&
+             node dist/server.js"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: azatech_frontend
+    restart: always
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: "http://localhost:5000/api"
+      PORT: 3000
+    ports:
+      - "3000:3000"
+
+volumes:
+  azatech_db_data:
