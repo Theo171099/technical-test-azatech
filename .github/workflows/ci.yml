@@ -57,6 +57,10 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
+      - name: Run Frontend Tests
+        working-directory: ./frontend
+        run: npm test
+
       - name: Next.js Production Build
         working-directory: ./frontend
         env:
