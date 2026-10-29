@@ -60,7 +60,17 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {navigation.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+            
+            let isActive = false;
+            if (item.href === '/') {
+              isActive = pathname === '/';
+            } else if (item.href === '/orders/new') {
+              isActive = pathname === '/orders/new';
+            } else if (item.href === '/orders') {
+              isActive = pathname === '/orders' || (pathname.startsWith('/orders/') && pathname !== '/orders/new');
+            } else {
+              isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+            }
 
             return (
               <Link
